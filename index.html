@@ -1438,7 +1438,7 @@ let loginRole=null,loginFails=0,loginLock=0;
 const ROLE_CARDS=[['admin','👑','CEO · Matriz K10','Painel completo, preços, estoque, gastos e pendências'],['seller','🏪','Atendente K11','Balcão, comandas, caixa e estoque da filial'],['driver','🛵','Motorista','Entregas aprovadas e conferência de idade']];
 function staffLoginBase(){if(!loginRole)return `<div class="page"><div class="page-title"><h1>🏢 Área da empresa</h1><p>Escolha a sua área. Cada área tem usuário e senha.</p></div><div class="choice-grid narrow">${ROLE_CARDS.map(([r,i,t,s])=>`<button class="choice ${r==='seller'?'red':''}" data-action="pick-role" data-value="${r}"><span class="ico">${i}</span><span><b>${t}</b><small>${s}</small></span></button>`).join('')}</div></div>`;
  const rc=ROLE_CARDS.find(x=>x[0]===loginRole);return `<div class="page"><div class="narrow"><button type="button" class="link-btn" data-action="role-back">← Trocar área</button><section class="panel stack" style="margin-top:12px"><div style="font-size:40px">${rc[1]}</div><h2>${rc[2]}</h2><form id="staffLoginForm" class="stack" autocomplete="on"><label class="field">Usuário<input name="login" required autocomplete="username" autocapitalize="none" placeholder="seu usuário"></label><label class="field">Senha<input name="pass" type="password" required autocomplete="current-password" placeholder="••••••"></label><button class="button block" type="submit">Entrar</button></form>${notice('🔒 Prévia: a senha é conferida neste aparelho. Na versão publicada, o login precisa ficar num servidor com senha criptografada e registro de acessos.')}</section></div></div>`}
-function staff(){const u=user();if(!u)return staffLogin();const tabs=u.role==='admin'?[['dashboard','Visão geral'],['products','Preços e margem'],['inventory','Estoque/transferências'],['count','Contagem K11'],['orders','Pedidos'],['pending','Pendências'],['cash','Caixas K11'],['expenses','Gastos'],['bingo','🎱 Bingo'],['customers','Clientes'],['combos','Combos'],['excel','Excel'],['team','Equipe'],['security','🔐 Segurança']]:u.role==='seller'?[['pos','Balcão / Comandas'],['bingo','🎱 Bingo'],['pending','Pendências'],['orders','Pedidos'+(ordersAttention()?` (${ordersAttention()})`:'')],['cash',currentShift(u.id)?'Fechar caixa':'Abrir caixa'],['inventory','Estoque K11'],['security','🔐 Segurança']]:[['orders','Minhas entregas'+(readyCount()?` (${readyCount()})`:'')],['earnings','Meus ganhos'],['security','🔐 Segurança']];if(!tabs.some(([id])=>id===staffTab))staffTab=tabs[0][0];const nPend=DB.debts.filter(d=>!d.paid).length;return `<div class="page"><div class="staff-header"><div><span class="eyebrow">${esc(UNITS[u.unit])} · ${roleLabel(u.role)}</span><h1>${esc(u.name)}</h1><p>Prévia local de gestão e operação · ${now()}</p></div>${button('Sair','logout','button dark')}</div>${staffAlerts()}<div class="tab-bar">${tabs.map(([id,txt])=>`<button data-action="tab" data-id="${id}" class="${staffTab===id?'active':''}">${txt}${id==='pending'&&nPend?` <b class="dot">${nPend}</b>`:''}</button>`).join('')}</div><div class="staff-layout">${({dashboard:staffDashboard,products:staffProducts,inventory:staffInventory,count:staffCount,orders:staffOrders,cash:staffCash,customers:staffCustomers,combos:staffCombos,excel:staffExcel,team:staffTeam,pos:staffPos,pending:staffPending,expenses:staffExpenses,earnings:driverEarnings,bingo:staffBingo,security:staffSecurity})[staffTab]?.()||''}</div></div>`}
+function staff(){const u=user();if(!u)return staffLogin();const tabs=u.role==='admin'?[['dashboard','Visão geral'],['products','Preços e margem'],['inventory','Estoque/transferências'],['count','Contagem K11'],['orders','Pedidos'],['fiscal','🧾 Balcão K11'],['pending','Pendências'],['cash','Caixas K11'],['expenses','Gastos'],['bingo','🎱 Bingo'],['customers','Clientes'],['combos','Combos'],['excel','Excel'],['team','Equipe'],['security','🔐 Segurança']]:u.role==='seller'?[['pos','Balcão / Comandas'],['bingo','🎱 Bingo'],['pending','Pendências'],['orders','Pedidos'+(ordersAttention()?` (${ordersAttention()})`:'')],['cash',currentShift(u.id)?'Fechar caixa':'Abrir caixa'],['inventory','Estoque K11'],['security','🔐 Segurança']]:[['orders','Minhas entregas'+(readyCount()?` (${readyCount()})`:'')],['earnings','Meus ganhos'],['security','🔐 Segurança']];if(!tabs.some(([id])=>id===staffTab))staffTab=tabs[0][0];const nPend=DB.debts.filter(d=>!d.paid).length;return `<div class="page"><div class="staff-header"><div><span class="eyebrow">${esc(UNITS[u.unit])} · ${roleLabel(u.role)}</span><h1>${esc(u.name)}</h1><p>Prévia local de gestão e operação · ${now()}</p></div>${button('Sair','logout','button dark')}</div>${staffAlerts()}<div class="tab-bar">${tabs.map(([id,txt])=>`<button data-action="tab" data-id="${id}" class="${staffTab===id?'active':''}">${txt}${id==='pending'&&nPend?` <b class="dot">${nPend}</b>`:''}</button>`).join('')}</div><div class="staff-layout">${({dashboard:staffDashboard,products:staffProducts,inventory:staffInventory,count:staffCount,orders:staffOrders,cash:staffCash,customers:staffCustomers,combos:staffCombos,excel:staffExcel,team:staffTeam,pos:staffPos,pending:staffPending,expenses:staffExpenses,earnings:driverEarnings,bingo:staffBingo,security:staffSecurity,fiscal:staffFiscal})[staffTab]?.()||''}</div></div>`}
 
 /* ---------- Cliente: cadastro e pontos ---------- */
 const REWARDS=[['skol-lata',60],['gelo-3kg',200],['coca-2l',350],['cx-skol',1200]],REWARD_MIN=3000,POINT_DAYS=90;
@@ -3023,7 +3023,7 @@ if(!STAFF){
  return}
 
 /* ================= EQUIPE ================= */
-const EKEYS=['settings','transfers','stockEvents','counts','debts','expenses','k11Sales','customers','shifts','tabs'];
+const EKEYS=['settings','transfers','stockEvents','counts','debts','expenses','k11Sales','customers','shifts','tabs','fiscal','fiscalSeq'];
 let SNAP=null,running=false,pushT=0,pullT=0,lastCat='',lastOrd='',pushing=false,role=null;
 const isAdmin=()=>role==='admin';
 function curMaps(){const m={c:{},o:{},e:{}};for(const p of DB.products)m.c['p:'+p.id]=rowOf(p,'p');for(const c of DB.combos)m.c['c:'+c.id]=rowOf(c,'c');for(const o of DB.orders)m.o[o.id]=o;for(const k of EKEYS)if(DB[k]!==undefined)m.e[k]=DB[k];return m}
@@ -3089,4 +3089,145 @@ window.addEventListener('online',()=>{if(SNAP)push()});
 })();
 
 boot();
+
+/* v44 · Balcão K11 + cupom fiscal (NFC-e) + pacote do contador */
+const FX_BEBIDAS=['Caixinhas','Cerveja lata','Long neck','Garrafa','Refrigerantes','Energéticos','Drinks e destilados'];
+const FX_PAG={dinheiro:['Dinheiro','01','dinheiro'],pix:['PIX','17','pix'],debito:['Débito (maquininha)','04','cartao'],credito:['Crédito (maquininha)','03','cartao']};
+const fxPl=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const fxHoje=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'America/Cuiaba'});
+let fxCart={},fxPay='debito',fxCpf='',fxQuery='',fxMonth=fxHoje().slice(0,7),fxFiles={maq:[],ext:[]},fxMaq=null,fxBusy=false;
+function fxBloqueadoK11(p){const t=fxPl(p.name+' '+p.id);if(/isqueiro|bic-/.test(t))return true;return p.category==='Tabacaria'&&!/essencia|narguil|ess-/.test(t)}
+const FX_REF=[[/sinuca|^dose /,'','',''],[/cigarr|palheiro|carlton|marlboro|lucky|rothmans|kent|new york|ny-azul/,'24022000',''],[/essencia|ess-/,'24031100',''],[/heineken zero|heineken-zero/,'22029100','0302200'],[/ice cabare|cabare|mansao|maromba|kislla/,'22060090','0200500'],[/red label|old parr|buchanan|whisky/,'22083020',''],[/isqueiro|bic-/,'96131000',''],[/carvao/,'44029000',''],[/aluminio/,'76071110',''],[/gelo/,'22019000',''],[/agua|lebrinha|purissima/,'22011000','0300100'],[/del valle|delvalle|kapo/,'22029900','0300800'],[/gatorade|isotonic/,'22029900',''],[/red bull|redbull|monster|vulcano|energetic/,'22029900','0300800'],[/coca|fanta|guarana|sprite|kituba|refrigerante/,'22021000','1701000'],[/skol|brahma|original|heineken|amstel|itaipava|imperio|petra|budweiser|bud-|corona|stella|cerveja/,'22030000','0301200']];
+function fxSugestao(p){const t=fxPl(p.name+' '+p.id);const r=FX_REF.find(x=>x[0].test(t));if(r&&r.length===4)return{csosn:'',cfop:'',ncm:'',cest:'',pis:''};return{csosn:'500',cfop:'5405',ncm:r?r[1]:'',cest:r?r[2]:'',pis:'08'}}
+function fxInit(){let ch=false;if(!DB.fiscal||typeof DB.fiscal!=='object'){DB.fiscal={emitente:{razao:'',cnpj:'',ie:'',endereco:'R. D, 386 · Três Lagoas',cidade:'Cuiabá',uf:'MT',cep:'78058-709',crt:'1'},servico:{nome:'Focus NFe',ambiente:'homologacao',conectado:false},produtos:{}};ch=true}
+ const F=DB.fiscal;F.produtos=F.produtos||{};for(const p of DB.products){if(!F.produtos[p.id]){const s=fxSugestao(p);F.produtos[p.id]={ncm:s.ncm,cest:s.cest,csosn:s.csosn,cfop:s.cfop,pis:s.pis,ean:'',ref:!!s.ncm,k11:!fxBloqueadoK11(p)};ch=true}}
+ if(!F.sug3){for(const p of DB.products){const f=F.produtos[p.id],s=fxSugestao(p);if(!f)continue;for(const k of ['ncm','cest','csosn','cfop','pis'])if(!f[k]&&s[k]){f[k]=s[k];if(k==='ncm')f.ref=true}}F.sug3=true;ch=true}
+ if(ch)save()}
+const fxProd=id=>(DB.fiscal&&DB.fiscal.produtos[id])||{};
+const fxVendeK11=p=>p.active!==false&&fxProd(p.id).k11!==false;
+const fxVendas=ym=>DB.orders.filter(o=>o.origin==='balcao'&&o.unit==='k11'&&String(o.dateKey||'').startsWith(ym||''));
+function fxLines(){return Object.entries(fxCart).filter(([id,q])=>q>0&&item(id)).map(([id,q])=>({key:'p:'+id,name:item(id).name,q,price:item(id).price11,photo:id,components:[[id,q]]}))}
+function fxPendencias(id){const f=fxProd(id),m=[];if(!/^\d{8}$/.test(f.ncm||''))m.push('NCM');if(!f.csosn)m.push('CSOSN');if(!f.cfop)m.push('CFOP');if(!f.pis)m.push('PIS/COFINS');return m}
+function fxEmitenteOk(){const e=DB.fiscal.emitente;return /^\d{14}$/.test(String(e.cnpj).replace(/\D/g,''))&&String(e.ie).replace(/\D/g,'').length>=8&&e.razao.trim().length>2}
+function fxStatusTxt(o){const s=o.fiscal&&o.fiscal.status;return s==='emitido'?'<b style="color:#16a34a">Cupom emitido</b>':s==='cancelado'?'<span class="muted">Venda cancelada</span>':'<span style="color:#d97706">Aguardando emissão</span>'}
+
+function staffFiscal(){fxInit();const F=DB.fiscal,lines=fxLines(),total=lines.reduce((a,l)=>a+l.price*l.q,0);
+ const lista=DB.products.filter(fxVendeK11).filter(p=>!fxQuery||fxPl(p.name).includes(fxPl(fxQuery))).slice(0,40);
+ const vendas=fxVendas(fxMonth),validas=vendas.filter(o=>o.status!=='cancelado'),soma=validas.reduce((a,o)=>a+o.total,0);
+ const semFiscal=DB.products.filter(fxVendeK11).filter(p=>fxPendencias(p.id).length).length;
+ const avisos=[];if(!F.servico.conectado)avisos.push('O serviço de emissão (Focus NFe) ainda <b>não está conectado</b>. As vendas ficam registradas como <b>aguardando emissão</b> e o cupom sai quando a ligação estiver pronta.');
+ if(!fxEmitenteOk())avisos.push('Preencha a <b>razão social, o CNPJ e a inscrição estadual da K11</b> em "Dados fiscais da K11".');
+ if(semFiscal)avisos.push(`<b>${semFiscal} produtos</b> ainda estão sem NCM/CEST completo. Preencha em "Dados fiscais dos produtos" com as notas dos fornecedores.`);
+ return `<div class="page-title"><h2>🧾 Balcão K11 · cupom fiscal</h2><p>Vendas no balcão da K11 com cupom fiscal (NFC-e) no CNPJ e no endereço da K11. Cigarro e isqueiro não aparecem aqui, porque as notas deles são do CNPJ da K10.</p></div>
+ ${avisos.map(a=>notice(a)).join('')}
+ ${notice('⏰ O cupom sai com a data e a hora em que é emitido, e não dá para mudar depois. Lance a venda logo depois de passar na maquininha, antes da mercadoria sair.')}
+ <div class="two-column"><section class="panel stack"><h3>🛒 Nova venda no balcão</h3>
+  <label class="field">Buscar produto<input id="fxBusca" value="${esc(fxQuery)}" placeholder="Ex.: Skol, Coca, gelo"></label>
+  <div style="max-height:340px;overflow:auto">${lista.map(p=>`<div class="summary" style="align-items:center;gap:10px"><span style="min-width:0">${esc(p.name)}<br><small class="muted">${money(p.price11)} · K11: ${p.stock11===null?'—':p.stock11} un.</small></span><span style="display:flex;align-items:center;gap:8px;flex-shrink:0">${button('−','','mini-btn',`data-fx="menos" data-id="${p.id}"`)}<b style="min-width:18px;text-align:center">${fxCart[p.id]||0}</b>${button('+','','mini-btn',`data-fx="mais" data-id="${p.id}"`)}</span></div>`).join('')||'<p class="muted tiny">Nenhum produto encontrado.</p>'}</div>
+ </section><section class="panel stack"><h3>Resumo da venda</h3>
+  ${lines.length?lines.map(l=>`<div class="summary"><span>${l.q} × ${esc(l.name)}</span><b>${money(l.price*l.q)}</b></div>`).join(''):'<p class="muted tiny">Adicione os produtos que passaram na maquininha.</p>'}
+  <div class="summary"><span><b>Total</b></span><b style="font-size:1.25em">${money(total)}</b></div>
+  <label class="field">Forma de pagamento<select id="fxPay">${Object.entries(FX_PAG).map(([k,v])=>`<option value="${k}" ${fxPay===k?'selected':''}>${v[0]}</option>`).join('')}</select></label>
+  <label class="field">CPF na nota (opcional)<input id="fxCpf" value="${esc(fxCpf)}" inputmode="numeric" placeholder="Só se o cliente pedir"></label>
+  ${fxPay==='debito'||fxPay==='credito'?notice('Confira se o total acima é igual ao valor que passou na maquininha.'):''}
+  ${button('Registrar venda e emitir cupom','','button',`data-fx="finalizar" ${lines.length?'':'disabled'}`)} ${lines.length?button('Limpar','','button dark',`data-fx="limpar"`):''}
+ </section></div>
+ <section class="panel stack"><div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;justify-content:space-between"><h3 style="margin:0">Vendas do balcão K11</h3><label class="field" style="margin:0">Mês<input type="month" id="fxMes" value="${esc(fxMonth)}"></label></div>
+  <p class="tiny muted">${validas.length} vendas · ${money(soma)} no mês</p>
+  ${vendas.length?vendas.map(o=>`<div class="summary" style="align-items:flex-start;gap:10px;padding:10px 0"><span style="min-width:0"><b>${esc(o.code)}</b> · <small class="muted">${esc(o.created)}</small><br><small>${o.lines.map(l=>`${l.q}× ${esc(l.name)}`).join(', ')}</small><br><small>${esc((FX_PAG[o.fiscal?.forma]||[o.payment])[0])} · ${fxStatusTxt(o)}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0"><b>${money(o.total)}</b>${o.status==='cancelado'?'':button('Cancelar','','mini-btn',`data-fx="cancelar" data-id="${o.id}"`)}</span></div>`).join(''):'<p class="muted tiny">Nenhuma venda de balcão neste mês.</p>'}
+ </section>
+ ${fxPacotePanel(validas,soma)}
+ ${fxEmitentePanel()}
+ ${fxProdutosPanel()}`}
+
+function fxPacotePanel(validas,soma){const cartao=validas.filter(o=>['debito','credito','pix'].includes(o.fiscal?.forma)).reduce((a,o)=>a+o.total,0);
+ const lista=k=>fxFiles[k].length?fxFiles[k].map((f,i)=>`<div class="summary"><span>📎 ${esc(f.name)} <small class="muted">${(f.size/1024).toFixed(0)} KB</small></span>${button('Tirar','','mini-btn',`data-fx="tirar" data-k="${k}" data-i="${i}"`)}</div>`).join(''):'<p class="muted tiny">Nenhum arquivo.</p>';
+ let conf='';if(fxMaq){const dif=fxMaq.total-cartao;conf=`<div class="notice ${Math.abs(dif)<=100?'good':'red'}"><b>Conferência:</b> a planilha da maquininha soma <b>${money(fxMaq.total)}</b> em ${fxMaq.n} lançamentos. As vendas do balcão pagas no cartão ou PIX somam <b>${money(cartao)}</b>. ${Math.abs(dif)<=100?'Está batendo. ✅':`Diferença de <b>${money(Math.abs(dif))}</b> ${dif>0?'a mais na maquininha (pode ter venda sem cupom)':'a mais no app'}. Confira antes de mandar.`}</div>`}
+ return `<section class="panel stack"><h3>📦 Pacote do mês para o contador</h3><p class="page-summary" style="margin:0">Junte o relatório da maquininha e o extrato do banco de <b>${esc(fxMonth)}</b>. O app monta um arquivo .zip com as vendas, os dados fiscais dos produtos (NCM, CSOSN, CFOP) e os seus anexos.</p>
+  <div class="two-column"><div class="stack"><label class="field">Vendas da maquininha (Excel, CSV, PDF ou foto)<input type="file" id="fxMaqFile" multiple accept=".xlsx,.csv,.pdf,image/*"></label>${lista('maq')}</div>
+  <div class="stack"><label class="field">Extrato bancário do mês (Excel, CSV, PDF, OFX ou foto)<input type="file" id="fxExtFile" multiple accept=".xlsx,.csv,.pdf,.ofx,image/*"></label>${lista('ext')}</div></div>
+  ${conf}<p class="tiny muted">Os XMLs oficiais dos cupons entram no pacote quando o serviço de emissão estiver conectado. Os anexos não ficam salvos no app, só entram no pacote.</p>
+  ${button(fxBusy?'Gerando…':'Gerar pacote do contador (.zip)','','button',`data-fx="pacote" ${fxBusy?'disabled':''}`)}</section>`}
+
+function fxEmitentePanel(){const e=DB.fiscal.emitente,s=DB.fiscal.servico;const inp=(k,l,ph='')=>`<label class="field">${l}<input data-fxe="${k}" value="${esc(e[k]||'')}" placeholder="${esc(ph)}"></label>`;
+ return `<details class="panel"><summary><b>🏢 Dados fiscais da K11 (emitente do cupom)</b> ${fxEmitenteOk()?'✅':'⚠️ incompleto'}</summary><div class="stack" style="margin-top:12px">
+  ${inp('razao','Razão social da K11','Como está no cartão do CNPJ')}${inp('cnpj','CNPJ da K11','00.000.000/0000-00')}${inp('ie','Inscrição estadual da K11','Só números')}
+  ${inp('endereco','Endereço da K11')}${inp('cidade','Cidade')}${inp('uf','UF')}${inp('cep','CEP')}
+  <label class="field">Regime<select data-fxe="crt"><option value="1" ${e.crt==='1'?'selected':''}>Simples Nacional</option><option value="3" ${e.crt==='3'?'selected':''}>Regime normal</option></select></label>
+  ${notice(`Serviço de emissão: <b>${esc(s.nome)}</b> · ambiente de ${s.ambiente==='producao'?'produção':'teste (homologação)'} · ${s.conectado?'conectado':'<b>ainda não conectado</b>'}. O certificado A1, o CSC e a chave do serviço <b>não</b> são guardados aqui no site. Eles ficam guardados no servidor, por segurança.`)}
+ </div></details>`}
+
+function fxProdutosPanel(){const ps=DB.products,inc=ps.filter(p=>fxVendeK11(p)&&fxPendencias(p.id).length).length;
+ const cell=(p,k,ph,w)=>`<input data-fxp="${p.id}" data-f="${k}" value="${esc(fxProd(p.id)[k]||'')}" placeholder="${ph}" inputmode="numeric" style="width:${w}px;padding:6px">`;
+ return `<details class="panel"><summary><b>🏷️ Dados fiscais dos produtos</b> · ${inc?`${inc} faltando`:'tudo preenchido ✅'}</summary><div class="stack" style="margin-top:12px">
+  ${notice('<b>NCM:</b> está na nota do fornecedor, na coluna <b>NCM/SH</b> (8 números). <b>CEST:</b> também vem na nota, nos dados de cada produto (7 números), e é obrigatório nos produtos com CSOSN 500. <b>CSOSN 500, CFOP 5405 e PIS/COFINS 08</b> seguem o padrão que o seu contador usa. Os NCMs e CESTs marcados como <b>referência</b> vieram do exemplo do contador: confira com as suas notas e corrija se for diferente. O que estiver em branco, o contador define.')}
+  <div class="table-wrap"><table class="data-table"><thead><tr><th>Produto</th><th>Vende na K11</th><th>NCM</th><th>CEST</th><th>CSOSN</th><th>CFOP</th><th>PIS/COFINS</th><th>Cód. barras</th><th>Falta</th></tr></thead><tbody>
+  ${ps.map(p=>{const f=fxProd(p.id),falta=fxPendencias(p.id);return `<tr><td>${esc(p.name)}<br><small class="muted">${esc(p.category)}</small></td><td><input type="checkbox" data-fxk="${p.id}" ${f.k11!==false?'checked':''}></td><td>${cell(p,'ncm','8 números',100)}</td><td>${cell(p,'cest','7 números',90)}</td><td>${cell(p,'csosn','',60)}</td><td>${cell(p,'cfop','',60)}</td><td>${cell(p,'pis','CST',50)}</td><td>${cell(p,'ean','EAN',130)}</td><td><small>${f.k11===false?'<span class="muted">não vende</span>':falta.length?`<span style="color:#d97706">${falta.join(', ')}</span>`:f.ref?'<span class="muted">referência, conferir</span>':'✅'}</small></td></tr>`}).join('')}
+  </tbody></table></div>${button('Baixar tabela fiscal (Excel)','','button dark',`data-fx="tabela"`)}</div></details>`}
+
+function fxFinalizar(){const lines=fxLines();if(!lines.length)throw Error('Adicione produtos.');const u=user();if(!admin())throw Error('Somente o CEO por enquanto.');
+ const cpf=fxCpf.replace(/\D/g,'');if(cpf&&cpf.length!==11&&cpf.length!==14)throw Error('CPF ou CNPJ do cliente inválido.');
+ const falta=[];const needs={};for(const l of lines){const id=l.photo;needs[id]=(needs[id]||0)+l.q;if(!fxVendeK11(item(id)))throw Error(item(id).name+' não pode ser vendido na K11.')}
+ for(const [id,q] of Object.entries(needs)){const p=item(id);if(p.stock11!==null&&p.stock11<q)falta.push(p.name);if(p.stock11!==null)p.stock11=Math.max(0,p.stock11-q)}
+ const total=lines.reduce((a,l)=>a+l.price*l.q,0),dia=fxHoje();DB.fiscalSeq=(DB.fiscalSeq||0)+1;
+ const order={id:uid(),code:'B11-'+String(DB.fiscalSeq).padStart(5,'0'),created:now(),dateKey:dia,origin:'balcao',unit:'k11',delivery:'retirada',payment:FX_PAG[fxPay][2],customer:null,lines:JSON.parse(JSON.stringify(lines)),needs,total,fee:0,status:'retirado',sellerId:u.id,shiftId:null,driverId:null,approvedBy:u.name,canceledBy:null,
+  fiscal:{status:'aguardando',forma:fxPay,tPag:FX_PAG[fxPay][1],cpf,emitente:{...DB.fiscal.emitente},itens:lines.map(l=>({id:l.photo,...fxProd(l.photo)})),registradoEm:Date.now()}};
+ DB.orders.unshift(order);fxCart={};fxCpf='';save();render();
+ toast(falta.length?`Venda registrada. Atenção: o estoque da K11 no app estava menor que o vendido (${falta.slice(0,3).join(', ')}). Confira as transferências.`:`Venda ${order.code} registrada · cupom aguardando emissão.`,!!falta.length)}
+
+function fxCancelar(id){const o=DB.orders.find(x=>x.id===id);if(!o||o.status==='cancelado')return;for(const [pid,q] of Object.entries(o.needs||{})){const p=item(pid);if(p&&p.stock11!==null)p.stock11+=q}
+ o.status='cancelado';o.canceledBy=user()?.name||'CEO';o.canceledAt=String(now()).split(', ')[0];o.fiscal=o.fiscal||{};if(o.fiscal.status!=='emitido')o.fiscal.status='cancelado';else o.fiscal.cancelarNaSefaz=true;save();closeModal();render();toast('Venda cancelada e estoque devolvido.')}
+
+function fxNum(v){if(typeof v==='number')return v;let s=String(v||'').replace(/[R$\s]/g,'');if(!s)return NaN;if(/,\d{1,2}$/.test(s))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'');return Number(s)}
+async function fxLerMaquininha(){fxMaq=null;let total=0,n=0;for(const f of fxFiles.maq){let rows=null;const low=f.name.toLowerCase();
+  if(low.endsWith('.csv')){const tx=await f.text();rows=tx.split(/\r?\n/).map(l=>l.split(/[;\t]/).length>1?l.split(/[;\t]/):l.split(','))}else if(low.endsWith('.xlsx')){const sh=await readXlsx(f);rows=sh.flatMap(s=>s.rows||[])}
+  if(!rows)continue;const hi=rows.findIndex((r,i)=>i<30&&r.some(c=>/valor|bruto|value/.test(fxPl(c))));if(hi<0)continue;const h=rows[hi].map(fxPl);
+  let ci=h.findIndex(x=>/valor bruto|bruto/.test(x));if(ci<0)ci=h.findIndex(x=>/valor|value/.test(x)&&!/liquid|taxa|tarifa/.test(x));if(ci<0)continue;
+  for(const r of rows.slice(hi+1)){if(r.some(c=>/cancel|estorn|negad|recusad|^total|^subtotal|^soma/.test(fxPl(String(c??'').trim()))))continue;const v=fxNum(r[ci]);if(Number.isFinite(v)&&v>0){total+=Math.round(v*100);n++}}}
+ if(n)fxMaq={total,n}}
+
+const fxX=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'})[c]);
+function fxXml(vendas){const e=DB.fiscal.emitente;return `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Relatório interno de vendas do balcão K11. NÃO é nota fiscal: os XMLs oficiais da NFC-e vêm do serviço de emissão. -->\n<relatorioVendasBalcao mes="${fxX(fxMonth)}" geradoEm="${fxX(now())}">\n <emitente razao="${fxX(e.razao)}" cnpj="${fxX(e.cnpj)}" ie="${fxX(e.ie)}" endereco="${fxX(e.endereco)}" cidade="${fxX(e.cidade)}" uf="${fxX(e.uf)}" cep="${fxX(e.cep)}" crt="${fxX(e.crt)}"/>\n${vendas.map(o=>` <venda codigo="${fxX(o.code)}" dataHora="${fxX(o.created)}" status="${fxX(o.status)}" cupom="${fxX(o.fiscal?.status)}" tPag="${fxX(o.fiscal?.tPag)}" total="${(o.total/100).toFixed(2)}"${o.fiscal?.cpf?` cpfCnpjCliente="${fxX(o.fiscal.cpf)}"`:''}>\n${o.lines.map(l=>{const f=fxProd(l.photo);return `  <item codigo="${fxX(l.photo)}" descricao="${fxX(l.name)}" ncm="${fxX(f.ncm)}" cest="${fxX(f.cest)}" csosn="${fxX(f.csosn)}" cfop="${fxX(f.cfop)}" pisCofins="${fxX(f.pis)}" ean="${fxX(f.ean)}" unidade="UND" quantidade="${l.q}" valorUnit="${(l.price/100).toFixed(2)}" valorTotal="${(l.price*l.q/100).toFixed(2)}"/>`}).join('\n')}\n </venda>`).join('\n')}\n</relatorioVendasBalcao>\n`}
+function fxSheetProdutos(){return{name:'Produtos fiscais',freeze:1,widths:[16,34,20,12,12,10,10,12,8,16,14,24],rows:[[H('ID'),H('Produto'),H('Categoria'),H('NCM'),H('CEST'),H('CSOSN'),H('CFOP'),H('PIS/COFINS'),H('Unid.'),H('Cód. barras'),H('Vende na K11'),H('Situação')],...DB.products.map(p=>{const f=fxProd(p.id),fa=fxPendencias(p.id);return[p.id,p.name,p.category,f.ncm||'',f.cest||'',f.csosn||'',f.cfop||'',f.pis||'','UND',f.ean||'',f.k11===false?'Não':'Sim',f.k11===false?'':fa.length?'Falta '+fa.join(', '):f.ref?'Referência, conferir':'OK']})]}}
+async function fxCapturarXlsx(sheets){let blob=null;const orig=downloadBlob;downloadBlob=async b=>{blob=b};try{await buildXlsx(sheets,'x.xlsx')}finally{downloadBlob=orig}return blob}
+async function fxPacote(){if(typeof JSZip==='undefined')throw Error('Biblioteca de arquivos não carregou.');const vendas=fxVendas(fxMonth),val=vendas.filter(o=>o.status!=='cancelado'),e=DB.fiscal.emitente,soma=val.reduce((a,o)=>a+o.total,0);
+ const porForma={};for(const o of val){const k=(FX_PAG[o.fiscal?.forma]||[o.payment])[0];porForma[k]=(porForma[k]||0)+o.total}
+ const resumo=[[H('Pacote do contador · Balcão K11'),''],['Mês',fxMonth],['Emitente',e.razao||'(preencher)'],['CNPJ',e.cnpj||'(preencher)'],['Inscrição estadual',e.ie||'(preencher)'],['Endereço',`${e.endereco} · ${e.cidade}-${e.uf} · ${e.cep}`],['Regime',e.crt==='1'?'Simples Nacional':'Regime normal'],['',''],[H('Vendas'),''],['Quantidade de vendas',val.length],['Total vendido',M(soma)],...Object.entries(porForma).map(([k,v])=>[k,M(v)]),['Vendas canceladas',vendas.length-val.length],['Cupons emitidos',val.filter(o=>o.fiscal?.status==='emitido').length],['Cupons aguardando emissão',val.filter(o=>o.fiscal?.status!=='emitido').length]];
+ if(fxMaq)resumo.push(['',''],[H('Conferência maquininha'),''],['Total na planilha da maquininha',M(fxMaq.total)]);
+ const linhas=[[H('Código'),H('Data e hora'),H('Status'),H('Cupom'),H('Pagamento'),H('Produto'),H('NCM'),H('CEST'),H('CSOSN'),H('CFOP'),H('PIS/COFINS'),H('Qtd'),H('Preço unit.'),H('Total item')]];
+ for(const o of vendas)for(const l of o.lines){const f=fxProd(l.photo);linhas.push([o.code,o.created,o.status,o.fiscal?.status||'',(FX_PAG[o.fiscal?.forma]||[o.payment])[0],l.name,f.ncm||'',f.cest||'',f.csosn||'',f.cfop||'',f.pis||'',l.q,M(l.price),M(l.price*l.q)])}
+ const rel=[[H('Docto'),H('Dt. emissão'),H('Hora'),H('Dt. canc.'),H('CFOP'),H('Destinatário'),H('Chave'),H('Situação'),H('Forma de pagamento'),H('Valor docto')]];
+ for(const o of [...vendas].reverse()){const f=o.fiscal||{},[d,h]=String(o.created).split(', ');rel.push([f.numero||o.code,d||'',h||'',o.status==='cancelado'?(o.canceledAt||d||''):'',[...new Set(o.lines.map(l=>fxProd(l.photo).cfop||''))].join('/'),f.cpf?'CPF/CNPJ '+f.cpf:'CONSUMIDOR FINAL',f.chave||'(aguardando emissão)',o.status==='cancelado'?'CANCELADA':f.status==='emitido'?'AUTORIZADA':'AGUARDANDO EMISSÃO',(FX_PAG[f.forma]||[o.payment])[0],M(o.total)])}
+ const xlsx=await fxCapturarXlsx([{name:'Relação NFC-e',rows:rel,freeze:1,widths:[12,12,10,12,8,22,48,22,22,14]},{name:'Resumo',rows:resumo,widths:[34,40]},{name:'Vendas e itens',rows:linhas,freeze:1,widths:[14,20,10,12,20,34,11,10,8,8,10,6,12,12]},fxSheetProdutos()]);
+ const z=new JSZip(),base=`K11-contador-${fxMonth}`;
+ z.file(`${base}/LEIA-ME.txt`,`Pacote do contador · Balcão K11 · ${fxMonth}\r\nGerado em ${now()} pelo app K10 Delivery.\r\n\r\n- <chave>-procNfe.xml: um XML oficial autorizado para cada cupom (entram quando o serviço de emissão estiver conectado).\r\n- vendas-balcao-K11-${fxMonth}.xlsx: relação das NFC-e do mês, resumo por forma de pagamento, vendas com NCM/CEST/CSOSN/CFOP de cada item e tabela fiscal dos produtos.\r\n- maquininha/ e extrato-bancario/: relatórios da maquininha e extrato do banco do mês, se anexados.\r\n${val.some(o=>o.fiscal?.status!=='emitido')?'\r\nATENÇÃO: há vendas com cupom ainda não emitido.\r\n':''}`);
+ z.file(`${base}/vendas-balcao-K11-${fxMonth}.xlsx`,xlsx);
+ for(const f of fxFiles.maq)z.file(`${base}/maquininha/${f.name}`,f);for(const f of fxFiles.ext)z.file(`${base}/extrato-bancario/${f.name}`,f);
+ for(const o of vendas.filter(o=>o.fiscal?.xml))z.file(`${base}/${o.fiscal.chave||o.code}-procNfe.xml`,o.fiscal.xml);
+ await downloadBlob(await z.generateAsync({type:'blob',compression:'DEFLATE'}),base+'.zip')}
+
+(function(){
+ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-fx]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const a=b.dataset.fx,id=b.dataset.id;
+  try{if(a==='mais'){const p=item(id);if(!p||!fxVendeK11(p))throw Error('Produto não disponível na K11.');fxCart[id]=(fxCart[id]||0)+1;render();return}
+   if(a==='menos'){fxCart[id]=Math.max(0,(fxCart[id]||0)-1);if(!fxCart[id])delete fxCart[id];render();return}
+   if(a==='limpar'){fxCart={};render();return}
+   if(a==='finalizar'){const total=fxLines().reduce((s,l)=>s+l.price*l.q,0);popup('Confirmar venda no balcão',`<p class="page-summary">Total <b>${money(total)}</b> em <b>${esc(FX_PAG[fxPay][0])}</b>.${fxPay==='debito'||fxPay==='credito'?' Esse é o mesmo valor que passou na maquininha?':''}</p><div style="display:flex;gap:8px;margin-top:12px">${button('Sim, registrar','','button','data-fx="confirmar"')}${button('Voltar','close','button dark')}</div>`);return}
+   if(a==='confirmar'){closeModal();fxFinalizar();return}
+   if(a==='cancelar'){const o=DB.orders.find(x=>x.id===id);popup('Cancelar venda do balcão',`<p class="page-summary">Cancelar a venda <b>${esc(o?.code)}</b> de ${money(o?.total)}? O estoque volta para a K11.${o?.fiscal?.status==='emitido'?' O cupom também precisa ser cancelado na Sefaz (até 30 minutos depois da emissão).':''}</p><div style="display:flex;gap:8px;margin-top:12px">${button('Sim, cancelar','','button','data-fx="cancelar-ok" data-id="'+esc(id)+'"')}${button('Voltar','close','button dark')}</div>`);return}
+   if(a==='cancelar-ok'){fxCancelar(id);return}
+   if(a==='tirar'){fxFiles[b.dataset.k].splice(+b.dataset.i,1);if(b.dataset.k==='maq')await fxLerMaquininha();render();return}
+   if(a==='tabela'){await buildXlsx([fxSheetProdutos()],'K10-tabela-fiscal.xlsx');return}
+   if(a==='pacote'){fxBusy=true;render();try{await fxPacote();toast('Pacote do contador gerado.')}finally{fxBusy=false;render()}return}
+  }catch(err){toast(err.message||'Algo deu errado.',true)}},true);
+ document.addEventListener('input',e=>{const t=e.target;if(t.id==='fxBusca'){fxQuery=t.value;const pos=t.selectionStart;render();const n=document.getElementById('fxBusca');if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}return}
+  if(t.id==='fxCpf'){fxCpf=t.value;return}},true);
+ document.addEventListener('change',async e=>{const t=e.target;try{
+  if(t.id==='fxPay'){fxPay=t.value;render();return}
+  if(t.id==='fxMes'){fxMonth=t.value||fxMonth;render();return}
+  if(t.dataset&&t.dataset.fxe){fxInit();DB.fiscal.emitente[t.dataset.fxe]=t.value.trim();save();render();return}
+  if(t.dataset&&t.dataset.fxk){fxInit();DB.fiscal.produtos[t.dataset.fxk].k11=t.checked;save();render();return}
+  if(t.dataset&&t.dataset.fxp){fxInit();const f=t.dataset.f;let v=t.value.trim();if(f!=='cfop'&&f!=='csosn')v=v.replace(/\D/g,'');if(f==='ncm'||f==='cest')DB.fiscal.produtos[t.dataset.fxp].ref=false;if(f==='ncm'&&v&&v.length!==8)toast('O NCM tem 8 números.',true);if(f==='cest'&&v&&v.length!==7)toast('O CEST tem 7 números.',true);DB.fiscal.produtos[t.dataset.fxp][f]=v;save();render();return}
+  if((t.id==='fxMaqFile'||t.id==='fxExtFile')&&t.files.length){const k=t.id==='fxMaqFile'?'maq':'ext';for(const f of t.files){if(f.size>25e6)throw Error(f.name+' passa de 25 MB.');fxFiles[k].push(f)}if(k==='maq')await fxLerMaquininha();render();return}
+ }catch(err){toast(err.message||'Não consegui ler o arquivo.',true)}},true);
+})();
 </script></body></html>
